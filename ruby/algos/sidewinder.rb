@@ -5,25 +5,33 @@ class SideWinder
     s << "(not valid)" unless is_valid
     puts s
   end
+  
+  def self.link_east(cell, toss)
+    print_move(cell, toss)
+    cell.link(cell.east)
+  end
+
+  def self.link_north(cell, toss)
+    print_move(cell, toss)
+    this = cell
+    run = [this]
+    while this.linked?(this.west)
+      run << this.west
+      this = this.west
+    end
+    if run.length > 0
+      target = run.sample
+      target.link(target.north)
+    end
+  end
 
   def self.on(grid)
     grid.each_cell do |cell|
       toss = [:n, :e].sample
       if toss == :e and cell.east
-        print_move(cell, toss)
-        cell.link(cell.east)
+        link_east(cell, toss)
       elsif toss == :n and cell.north
-        print_move(cell, toss)
-        this = cell
-        run = [this]
-        while this.linked?(this.west)
-          run << this.west
-          this = this.west
-        end
-        if run.length > 0
-          target = run.sample
-          target.link(target.north)
-        end
+        link_north(cell, toss)
       else
         print_move(cell, toss, false)
       end

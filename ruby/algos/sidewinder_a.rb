@@ -19,8 +19,7 @@ class SideWinderA
       run << this.west
       this = this.west
     end
-    if run.length > 0
-      target = run.sample
+    if target = run.sample
       target.link(target.north)
     end
   end
@@ -30,14 +29,10 @@ class SideWinderA
       toss = [:n, :e].sample
       if !cell.east && !cell.north
         print_move(cell, toss, false)
-      elsif !cell.north
-        link_east(cell, toss)
-      elsif !cell.east
+      elsif !cell.east || (cell.north && toss == :n)
         link_north(cell, toss)
-      elsif toss == :e
+      else
         link_east(cell, toss)
-      elsif toss == :n
-        link_north(cell, toss)
       end
       if debug
         puts grid.diag_print(cell) 

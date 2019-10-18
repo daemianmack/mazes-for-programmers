@@ -1,11 +1,11 @@
 require_relative 'grid/grid'
-require_relative 'algos/sidewinder'
+require_relative 'algos/sidewinder_a'
 require_relative 'seed'
 
 seed = Seed.set(ENV['SEED'])
 
 grid = Grid.new(4,4)
-SideWinder.on(grid, ENV['DEBUG'])
+SideWinderA.on(grid, ENV['DEBUG'])
 
 puts "Complete."
 puts grid

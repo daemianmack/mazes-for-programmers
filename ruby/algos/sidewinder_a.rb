@@ -28,11 +28,11 @@ class SideWinderA
   def self.on(grid, debug)
     grid.each_cell do |cell|
       toss = [:n, :e].sample
-      if not cell.east and not cell.north
+      if !cell.east && !cell.north
         print_move(cell, toss, false)
-      elsif not cell.north
+      elsif !cell.north
         link_east(cell, toss)
-      elsif not cell.east
+      elsif !cell.east
         link_north(cell, toss)
       elsif toss == :e
         link_east(cell, toss)

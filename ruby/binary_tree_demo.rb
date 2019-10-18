@@ -5,7 +5,7 @@ require_relative 'seed'
 seed = Seed.set(ENV['SEED'])
 
 grid = Grid.new(4,4)
-BinaryTree.on(grid)
+BinaryTree.on(grid, ENV['DEBUG'])
 
 puts "Complete."
 puts grid

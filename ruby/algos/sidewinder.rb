@@ -25,7 +25,7 @@ class SideWinder
     end
   end
 
-  def self.on(grid)
+  def self.on(grid, debug)
     grid.each_cell do |cell|
       toss = [:n, :e].sample
       if not cell.east and not cell.north
@@ -39,8 +39,10 @@ class SideWinder
       elsif toss == :n
         link_north(cell, toss)
       end
-      puts grid.diag_print(cell)
-      puts
+      if debug
+        puts grid.diag_print(cell) 
+        puts
+      end
     end
   end
 end

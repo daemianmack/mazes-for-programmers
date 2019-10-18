@@ -5,7 +5,7 @@ require_relative 'seed'
 seed = Seed.set(ENV['SEED'])
 
 grid = Grid.new(4,4)
-SideWinder.on(grid)
+SideWinder.on(grid, ENV['DEBUG'])
 
 puts "Complete."
 puts grid

@@ -1,15 +1,13 @@
 require_relative 'grid/grid'
 require_relative 'algos/sidewinder'
+require_relative 'seed'
 
-seed = if ENV['SEED']
-         ENV['SEED'].to_i
-       else
-         Random.new_seed
-       end
-srand(seed)
+seed = Seed.set(ENV['SEED'])
 
 grid = Grid.new(4,4)
 SideWinder.on(grid)
+
+puts "Complete."
 puts grid
 
 puts "Seed: #{seed}"

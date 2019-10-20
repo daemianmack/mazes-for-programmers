@@ -10,3 +10,4 @@ SideWinderA.on(grid, ENV['DEBUG'])
 
 puts "Complete."
 puts grid
+grid.to_png.save "foo.png"

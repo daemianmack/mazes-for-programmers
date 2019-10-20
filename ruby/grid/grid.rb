@@ -62,7 +62,7 @@ class Grid
     end
   end
   
-  def to_s
+  def diag_print(current_cell=nil)
     output = "∙" + "───∙" * columns + "\n"
 
     each_row do |row|
@@ -72,7 +72,11 @@ class Grid
       row.each do |cell|
         cell = Cell.new(-1, -1) unless cell
 
-        body = "   "
+        body = if current_cell && cell == current_cell
+                 " ✖ "
+               else
+                 "   "
+               end
         east_boundary = (cell.linked?(cell.east) ? " " : "│")
         
         top << body << east_boundary
@@ -89,35 +93,8 @@ class Grid
     output
   end
 
-  def diag_print(current_cell)
-      output = "∙" + "───∙" * columns + "\n"
-
-      each_row do |row|
-        top = "│"
-        bottom = "∙"
-
-        row.each do |cell|
-          cell = Cell.new(-1, -1) unless cell
-
-          body = if cell == current_cell
-                   " ✖ "
-                 else
-                   "   "
-                 end
-          east_boundary = (cell.linked?(cell.east) ? " " : "│")
-          
-          top << body << east_boundary
-
-          south_boundary = (cell.linked?(cell.south) ? "   " : "───")
-          corner = "∙"
-          bottom << south_boundary << corner
-        end
-
-        output << top << "\n"
-        output << bottom << "\n"
-      end
-
-      output
+  def to_s
+    diag_print
   end
 
 end

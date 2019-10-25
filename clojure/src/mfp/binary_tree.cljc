@@ -18,10 +18,10 @@
 (def corner "∙")
 (def v-wall "│")
 (def h-wall "───")
-(def body   " ✖ ")
+(def body   "   ")
 (defn v-wall-p [pred] (if (pred) " " v-wall))
 (defn h-wall-p [pred] (if (pred) "   " h-wall))
-(defn body-p   [pred] (if (pred) body "   "))
+(defn body-p   [pred] (if (pred) body body))
 
 (defn draw-top-of-row [sb row]
   (.append sb corner)

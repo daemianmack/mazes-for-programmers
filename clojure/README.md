@@ -6,6 +6,15 @@ The minimal deps.edn allows invocation through the Clojure binary
 [binary]. This allows for a full-blown REPL experience with something
 like CIDER in Emacs.
 
+#### Example REPL invocation
+`
+> clj -A:cider
+`
+
+This will print out the port on which nREPL is now listening for your
+editor to connect.
+
+
 [binary]: https://clojure.org/guides/getting_started
 
 ### ClojureScript for fast CLI iterations

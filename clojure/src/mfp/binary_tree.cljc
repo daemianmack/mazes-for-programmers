@@ -1,4 +1,5 @@
-(ns mfp.binary-tree)
+(ns mfp.binary-tree
+  #?(:cljs (:import [goog.string StringBuffer])))
 
 (defn cell-to-north?
   [[row col]]
@@ -14,33 +15,41 @@
     (cell-to-north? cell)        (conj :north)
     (cell-to-east?  cell n-cols) (conj :east)))
 
+(def corner "∙")
+(def v-wall "│")
+(def h-wall "───")
+(def body   " ✖ ")
+(defn v-wall-p [pred] (if (pred) " " v-wall))
+(defn h-wall-p [pred] (if (pred) "   " h-wall))
+(defn body-p   [pred] (if (pred) body "   "))
+
+(defn draw-top-of-row [sb row]
+  (.append sb corner)
+  (doseq [cell row]
+    (let [north-sigil (h-wall-p #(= :north (:link cell)))]
+      (.append sb (str north-sigil corner))))
+  (.append sb "\n"))
+
+(defn draw-bot-of-row [sb row current-cell]
+  (.append sb v-wall)
+  (doseq [cell row]
+    (let [body-sigil (body-p #(= current-cell cell))
+          east-sigil (v-wall-p #(= :east (:link cell)))]
+      (.append sb (str body-sigil east-sigil))))
+  (.append sb "\n"))
+
 (defn diag-print
   ([grid]
    (diag-print grid nil))
   ([grid current-cell]
-   (let [n-cols (count (first grid))
-         v-wall "│"
-         corner "∙"]
-     (doseq [row grid]
-       (println
-        (apply str corner
-               (for [cell row]
-                 (let [north-sigil (if (= :north (:link cell))
-                                     "   "
-                                     "───")]
-                   (apply str north-sigil corner)))))
-       (println
-        (apply str
-               v-wall
-               (for [cell row]
-                 (let [body (if (= current-cell cell)
-                              " x "
-                              "   ")
-                       east-sigil (if (= :east (:link cell))
-                                    " "
-                                    v-wall)]
-                   (apply str body east-sigil))))))
-     (println (apply str corner (repeat n-cols (str "───" corner)))))))
+   (doseq [row grid
+           :let [sb (StringBuffer.)]]
+     (draw-top-of-row sb row)
+     (draw-bot-of-row sb row current-cell)
+     (print (str sb)))
+   (let [n-cols (count (first grid))]
+     (println (apply str corner
+                     (repeat n-cols (str h-wall corner)))))))
 
 (defn binary-tree-demo
   [n-rows n-cols]

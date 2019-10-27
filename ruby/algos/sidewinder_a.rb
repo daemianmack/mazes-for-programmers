@@ -13,11 +13,9 @@ class SideWinderA
 
   def self.link_north(cell, toss)
     print_move(cell, toss)
-    this = cell
-    run = [this]
-    while this.linked?(this.west)
-      run << this.west
-      this = this.west
+    run = [cell]
+    while run.last.linked?(run.last.west)
+      run << run.last.west
     end
     if target = run.sample
       target.link(target.north)

@@ -6,37 +6,34 @@
 (def v-wall "│")
 (def h-wall "───")
 (def body   "   ")
-(defn v-wall-p [pred] (if (pred) " " v-wall))
+
+(defn v-wall-p [pred] (if (pred) " "  v-wall))
 (defn h-wall-p [pred] (if (pred) "   " h-wall))
-(defn body-p   [pred] (if (pred) body body))
 
 (defn draw-top-of-row [sb row]
   (.append sb corner)
   (doseq [cell row]
-    (let [north-sigil (h-wall-p #((:links cell) :north))]
+    (let [north-sigil (h-wall-p #((comp :north :links) cell))]
       (.append sb (str north-sigil corner))))
   (.append sb "\n"))
 
-(defn draw-bot-of-row [sb row current-cell]
+(defn draw-bot-of-row [sb row]
   (.append sb v-wall)
   (doseq [cell row]
-    (let [body-sigil "   "
-          east-sigil (v-wall-p #((:links cell) :east))]
-      (.append sb (str body-sigil east-sigil))))
+    (let [east-sigil (v-wall-p #((comp :east :links) cell))]
+      (.append sb (str body east-sigil))))
   (.append sb "\n"))
 
 (defn diag-print
-  ([grid]
-   (diag-print grid nil))
-  ([grid current-cell]
-   (doseq [row grid
-           :let [sb (StringBuffer.)]]
-     (draw-top-of-row sb row)
-     (draw-bot-of-row sb row current-cell)
-     (print (str sb)))
-   (let [n-cols (count (first grid))]
-     (println (apply str corner
-                     (repeat n-cols (str h-wall corner)))))))
+  [grid]
+  (let [sb (StringBuffer.)]
+    (doseq [row grid]
+      (draw-top-of-row sb row)
+      (draw-bot-of-row sb row))
+    (let [n-cols (count (first grid))]
+      (.append sb (apply str corner
+                         (repeat n-cols (str h-wall corner)))))
+    (print (str sb "\n"))))
 
 (defn cell-to-north?
   [[row col]]
@@ -63,7 +60,7 @@
   (and ((complement cell-to-north?) cell)
        ((complement cell-to-east?) cell n-cols)))
 
-(defn reverse-split-with
+(defn split-with-from-end
   "`clojure.core/split-with`, but split from the right end of `coll`."
   [f coll]
   (let [[with without] (split-with f (reverse coll))]
@@ -75,7 +72,7 @@
   north link to a random cell in the run, and graft that new run onto
   the non-participating portion of `coll`."
   [acc]
-  (let [[not-run run] (reverse-split-with (comp :east :links) acc)
+  (let [[not-run run] (split-with-from-end (comp :east :links) acc)
         run (conj run {:links #{}})
         target (seed/rand-nth (range (count run)))
         new-run (update-in run [target :links] conj :north)]

@@ -1,3 +1,5 @@
-{:deps {org.clojure/clojure {:mvn/version "1.10.1"}}
- :aliases {:cider {:extra-deps {cider/cider-nrepl {:mvn/version "0.21.1"}}
+{:deps {org.clojure/clojure {:mvn/version "1.10.1"}
+        org.clojure/data.generators {:mvn/version "0.1.2"}
+        cljsjs/seedrandom {:mvn/version "3.0.5-0"}}
+ :aliases {:cider {:extra-deps {cider/cider-nrepl {:mvn/version "0.22.0"}}
                    :main-opts  ["-m" "nrepl.cmdline" "--middleware" "[cider.nrepl/cider-middleware]"]}}}

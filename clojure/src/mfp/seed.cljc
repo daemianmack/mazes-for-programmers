@@ -23,5 +23,7 @@
        (aset js/Math "random" prng))))
 
 (defn rand-nth [coll]
-  #?(:clj (gen/rand-nth coll)
-     :cljs (clojure.core/rand-nth coll)))
+  (if (empty? coll)
+    coll
+    #?(:clj (gen/rand-nth coll)
+       :cljs (clojure.core/rand-nth coll))))

@@ -1,4 +1,5 @@
 (ns mfp.binary-tree
+  (:require [mfp.seed :as seed])
   #?(:cljs (:import [goog.string StringBuffer])))
 
 (defn cell-to-north?
@@ -51,17 +52,21 @@
      (println (apply str corner
                      (repeat n-cols (str h-wall corner)))))))
 
+(def respecting-dynamic-scope doall)
+
 (defn binary-tree-demo
   [n-rows n-cols]
-  (let [grid (for [row (range n-rows)]
-               (for [col (range n-cols)]
-                 (let [cell [row col]
-                       neighbor (-> (neighbors cell n-cols)
-                                    shuffle
-                                    first)]
-                   {:link neighbor})))]
     (diag-print grid)))
+  (let [grid (respecting-dynamic-scope
+              (for [row (range n-rows)]
+                (for [col (range n-cols)]
+                  (let [cell [row col]
+                        neighbor (seed/rand-nth (neighbors cell n-cols))]
+                    {:link neighbor}))))]
 
-(defn -main []
-  (binary-tree-demo 4 4))
+(defn -main [& args]
+  #?(:clj (seed/with-seed (first args)
+            (binary-tree-demo 4 4))
+     :cljs (do (seed/seed-random! (first args))
+               (binary-tree-demo 4 4))))
 

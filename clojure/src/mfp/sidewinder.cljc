@@ -78,7 +78,7 @@
         new-run (update-in run [target :links] conj :north)]
     (into not-run new-run)))
 
-(defn make-acc
+(defn add-cell
   [acc link-none? link-east? link-north?]
   (let [toss (seed/rand-nth [:n :e])]
     (cond
@@ -101,7 +101,7 @@
                           link-none?  (partial link-none?  n-cols cell)
                           link-east?  (partial link-east?  n-cols cell)
                           link-north? (partial link-north? n-cols cell)
-                          acc (make-acc acc link-none? link-east? link-north?)]
+                          acc (add-cell acc link-none? link-east? link-north?)]
                       (recur acc (inc col-n)))))))]
     (print-grid grid)))
 

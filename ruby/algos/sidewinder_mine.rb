@@ -1,4 +1,4 @@
-class SideWinderA
+class SidewinderMine
 
   def self.print_move(cell, toss, is_valid=true)
     s = "[#{cell.row}, #{cell.column}] toss: #{toss} "

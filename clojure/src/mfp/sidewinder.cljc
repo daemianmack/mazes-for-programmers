@@ -24,7 +24,7 @@
       (.append sb (str body east-sigil))))
   (.append sb "\n"))
 
-(defn diag-print
+(defn print-grid
   [grid]
   (let [sb (StringBuffer.)]
     (doseq [row grid]
@@ -103,7 +103,7 @@
                           link-north? (partial link-north? n-cols cell)
                           acc (make-acc acc link-none? link-east? link-north?)]
                       (recur acc (inc col-n)))))))]
-    (diag-print grid)))
+    (print-grid grid)))
 
 (defn -main [& args]
   #?(:clj (seed/with-seed (first args)

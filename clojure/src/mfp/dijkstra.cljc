@@ -11,53 +11,56 @@
 (defn h-wall-p [pred] (if (pred) "   " h-wall))
 
 (defn draw-top-of-row [sb row]
-  (.append sb corner)
-  (doseq [cell row]
-    (let [north-sigil (h-wall-p #((comp :north :links) cell))]
-      (.append sb (str north-sigil corner))))
-  (.append sb "\n"))
-
-(defn draw-bot-of-row [sb row]
   (.append sb v-wall)
   (doseq [cell row]
     (let [east-sigil (v-wall-p #((comp :east :links) cell))]
       (.append sb (str body east-sigil))))
   (.append sb "\n"))
 
+(defn draw-bot-of-row [sb row]
+  (.append sb corner)
+  (doseq [cell row]
+    (let [south-sigil (h-wall-p #((comp :south :links) cell))]
+      (.append sb (str south-sigil corner))))
+  (.append sb "\n"))
+
 (defn print-grid
   [grid]
   (let [sb (StringBuffer.)]
+    (let [n-cols (count (first grid))]
+      (.append sb (apply str corner
+                         (repeat n-cols (str h-wall corner))))
+      (.append sb "\n"))
     (doseq [row grid]
       (draw-top-of-row sb row)
       (draw-bot-of-row sb row))
-    (let [n-cols (count (first grid))]
-      (.append sb (apply str corner
-                         (repeat n-cols (str h-wall corner)))))
     (print (str sb "\n"))))
 
-(defn cell-to-north?
-  [{x :x :as cell}]
-  (pos? x))
+(defn cell-to-south?
+  "Is cell's row not the bottom row?"
+  [{x :x :as cell} n-rows]
+  (< x (dec n-rows)))
 
 (defn cell-to-east?
+  "Is cell's column not the last column?"
   [{y :y :as cell} n-cols]
   (< y (dec n-cols)))
 
-(defn link-north?
-  [n-cols cell toss]
+(defn link-south?
+  [n-rows n-cols cell toss]
   (or ((complement cell-to-east?) cell n-cols)
-      (and (cell-to-north? cell)
-           (= :n toss))))
+      (and (cell-to-south? cell n-rows)
+           (= :s toss))))
 
 (defn link-east?
-  [n-cols cell toss]
-  (or ((complement cell-to-north?) cell)
+  [n-rows n-cols cell toss]
+  (or ((complement cell-to-south?) cell n-rows)
       (and (cell-to-east? cell n-cols)
            (= :e toss))))
 
 (defn link-none?
-  [n-cols cell]
-  (and ((complement cell-to-north?) cell)
+  [n-rows n-cols cell]
+  (and ((complement cell-to-south?) cell n-rows)
        ((complement cell-to-east?) cell n-cols)))
 
 (defn split-with-from-end
@@ -75,16 +78,16 @@
   (let [[not-run run] (split-with-from-end (comp :east :links) acc)
         run (conj run (assoc cell :links #{}))
         target (seed/rand-nth (range (count run)))
-        new-run (update-in run [target :links] conj :north)]
+        new-run (update-in run [target :links] conj :south)]
     (into not-run new-run)))
 
 (defn add-cell
-  [acc cell link-none? link-east? link-north?]
-  (let [toss (seed/rand-nth [:n :e])]
+  [acc cell link-none? link-east? link-south?]
+  (let [toss (seed/rand-nth [:s :e])]
     (cond
       (link-none?)       (conj acc (assoc cell :links #{}))
       (link-east?  toss) (conj acc (assoc cell :links #{:east}))
-      (link-north? toss) (link-run-north acc cell)
+      (link-south? toss) (link-run-north acc cell)
       :else              (conj acc (assoc cell :links #{})))))
 
 (def respecting-dynamic-scope doall)
@@ -98,10 +101,10 @@
                   (if (= col-n n-cols)
                     acc
                     (let [cell {:x row :y col-n}
-                          link-none?  (partial link-none?  n-cols cell)
-                          link-east?  (partial link-east?  n-cols cell)
-                          link-north? (partial link-north? n-cols cell)
-                          acc (add-cell acc cell link-none? link-east? link-north?)]
+                          link-none?  (partial link-none?  n-rows n-cols cell)
+                          link-east?  (partial link-east?  n-rows n-cols cell)
+                          link-south? (partial link-south? n-rows n-cols cell)
+                          acc (add-cell acc cell link-none? link-east? link-south?)]
                       (recur acc (inc col-n)))))))]
     (print-grid grid)))
 

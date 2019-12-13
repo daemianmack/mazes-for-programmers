@@ -36,12 +36,12 @@
     (print (str sb "\n"))))
 
 (defn cell-to-north?
-  [[row col]]
-  (pos? row))
+  [{x :x :as cell}]
+  (pos? x))
 
 (defn cell-to-east?
-  [[row col] n-cols]
-  (< col (dec n-cols)))
+  [{y :y :as cell} n-cols]
+  (< y (dec n-cols)))
 
 (defn link-north?
   [n-cols cell toss]
@@ -71,21 +71,21 @@
   "Pluck current run of eastward-linked cells out of `coll`, assign a
   north link to a random cell in the run, and graft that new run onto
   the non-participating portion of `coll`."
-  [acc]
+  [acc cell]
   (let [[not-run run] (split-with-from-end (comp :east :links) acc)
-        run (conj run {:links #{}})
+        run (conj run (assoc cell :links #{}))
         target (seed/rand-nth (range (count run)))
         new-run (update-in run [target :links] conj :north)]
     (into not-run new-run)))
 
 (defn add-cell
-  [acc link-none? link-east? link-north?]
+  [acc cell link-none? link-east? link-north?]
   (let [toss (seed/rand-nth [:n :e])]
     (cond
-      (link-none?)       (conj acc {:links #{}})
-      (link-east?  toss) (conj acc {:links #{:east}})
-      (link-north? toss) (link-run-north acc)
-      :else              (conj acc {:links #{}}))))
+      (link-none?)       (conj acc (assoc cell :links #{}))
+      (link-east?  toss) (conj acc (assoc cell :links #{:east}))
+      (link-north? toss) (link-run-north acc cell)
+      :else              (conj acc (assoc cell :links #{})))))
 
 (def respecting-dynamic-scope doall)
 
@@ -97,11 +97,11 @@
                        col-n 0]
                   (if (= col-n n-cols)
                     acc
-                    (let [cell [row col-n]
+                    (let [cell {:x row :y col-n}
                           link-none?  (partial link-none?  n-cols cell)
                           link-east?  (partial link-east?  n-cols cell)
                           link-north? (partial link-north? n-cols cell)
-                          acc (add-cell acc link-none? link-east? link-north?)]
+                          acc (add-cell acc cell link-none? link-east? link-north?)]
                       (recur acc (inc col-n)))))))]
     (print-grid grid)))
 

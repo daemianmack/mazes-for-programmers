@@ -21,6 +21,10 @@ class Grid
     end
   end
 
+  def contents_of(cell)
+    " "
+  end
+  
   def configure_cells
     each_cell do |cell|
       row, col = cell.row, cell.column
@@ -76,7 +80,7 @@ class Grid
         body = if current_cell && cell == current_cell
                  " ✖ "
                else
-                 "   "
+                 " #{contents_of(cell)} "
                end
         east_boundary = (cell.linked?(cell.east) ? " " : "│")
         

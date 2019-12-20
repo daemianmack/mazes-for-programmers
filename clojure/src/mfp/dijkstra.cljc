@@ -70,9 +70,9 @@
     [(vec (reverse without))
      (vec (reverse with))]))
 
-(defn link-run-north
+(defn link-run-south
   "Pluck current run of eastward-linked cells out of `coll`, assign a
-  north link to a random cell in the run, and graft that new run onto
+  south link to a random cell in the run, and graft that new run onto
   the non-participating portion of `coll`."
   [acc cell]
   (let [[not-run run] (split-with-from-end (comp :east :links) acc)
@@ -87,7 +87,7 @@
     (cond
       (link-none?)       (conj acc (assoc cell :links #{}))
       (link-east?  toss) (conj acc (assoc cell :links #{:east}))
-      (link-south? toss) (link-run-north acc cell)
+      (link-south? toss) (link-run-south acc cell)
       :else              (conj acc (assoc cell :links #{})))))
 
 (def respecting-dynamic-scope doall)
@@ -96,16 +96,16 @@
   [n-rows n-cols]
   (let [grid (respecting-dynamic-scope
               (for [row (range n-rows)]
-                (loop [acc []
-                       col-n 0]
-                  (if (= col-n n-cols)
-                    acc
-                    (let [cell {:x row :y col-n}
+                (loop [cells []
+                       col 0]
+                  (if (= col n-cols)
+                    cells
+                    (let [cell {:x row :y col}
                           link-none?  (partial link-none?  n-rows n-cols cell)
                           link-east?  (partial link-east?  n-rows n-cols cell)
                           link-south? (partial link-south? n-rows n-cols cell)
-                          acc (add-cell acc cell link-none? link-east? link-south?)]
-                      (recur acc (inc col-n)))))))]
+                          cells (add-cell cells cell link-none? link-east? link-south?)]
+                      (recur cells (inc col)))))))]
     (print-grid grid)))
 
 (defn -main [& args]

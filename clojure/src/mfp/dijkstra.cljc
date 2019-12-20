@@ -5,16 +5,21 @@
 (def corner "∙")
 (def v-wall "│")
 (def h-wall "───")
-(def body   "   ")
 
 (defn v-wall-p [pred] (if (pred) " "  v-wall))
 (defn h-wall-p [pred] (if (pred) "   " h-wall))
+
+(defn body [{cost :cost}]
+  (str " "
+       #?(:clj  (Integer/toString cost 36)
+          :cljs (.toString cost 36))
+       " "))
 
 (defn draw-top-of-row [sb row]
   (.append sb v-wall)
   (doseq [cell row]
     (let [east-sigil (v-wall-p #((comp :east :links) cell))]
-      (.append sb (str body east-sigil))))
+      (.append sb (str (body cell) east-sigil))))
   (.append sb "\n"))
 
 (defn draw-bot-of-row [sb row]
@@ -90,23 +95,98 @@
       (link-south? toss) (link-run-south acc cell)
       :else              (conj acc (assoc cell :links #{})))))
 
-(def respecting-dynamic-scope doall)
+(defmulti find-neighbor (fn [cell indexed link] link))
+
+(defmethod find-neighbor :east
+  [{x :x y :y} indexed link]
+  (let [east-key {:x x :y (inc y)}]
+    (get indexed east-key)))
+
+(defmethod find-neighbor :south
+  [{x :x y :y} indexed link]
+  (let [south-key {:x (inc x) :y y}]
+    (get indexed south-key)))
+
+(defmethod find-neighbor :west
+  [{x :x y :y} indexed link]
+  (let [west-key {:x x :y (dec y)}]
+    (get indexed west-key)))
+
+(defmethod find-neighbor :north
+  [{x :x y :y} indexed link]
+  (let [north-key {:x (dec x) :y y}]
+    (get indexed north-key)))
+
+(defn find-costs
+  [root indexed]
+  (loop [costs {root {:cost 0}}
+         frontier [root]
+         visited #{}]
+    (let [frontier (remove visited frontier)]
+      (if (empty? frontier)
+        costs
+        (let [cell (first frontier)
+              new-frontier (->> (:links cell)
+                                (mapcat (partial find-neighbor cell indexed))
+                                (remove visited))
+              costs (reduce (fn [acc new-cell]
+                              (assoc-in acc [new-cell :cost]
+                                        (inc (get-in costs [cell :cost]))))
+                            costs
+                            new-frontier)]
+          (recur costs
+                 (into (vec (rest frontier)) new-frontier)
+                 (conj visited cell)))))))
+
+(defn add-costs
+  [grid]
+  (let [stream (mapcat identity grid)
+        indexed (group-by #(select-keys % [:x :y]) stream)
+        with-costs (find-costs (ffirst grid) indexed)]
+    (reduce (fn [acc [{x :x y :y} {cost :cost}]]
+              (assoc-in acc [x y :cost] cost))
+            grid
+            with-costs)))
+
+(defmulti reciprocal-link-desc (fn [cell link] link))
+
+(defmethod reciprocal-link-desc :east
+  [{x :x y :y} _]
+  {:x x :y (inc y) :link-to #{:west}})
+
+(defmethod reciprocal-link-desc :south
+  [{x :x y :y} _]
+  {:x (inc x) :y y :link-to #{:north}})
+
+(defn add-reciprocal-links
+  [grid]
+  (let [link-descs (for [row grid
+                         cell row
+                         link (:links cell)]
+                     (reciprocal-link-desc cell link))]
+    (reduce
+     (fn [acc {:keys [x y link-to]}]
+       (update-in acc [x y :links] into link-to))
+     grid
+     link-descs)))
 
 (defn dijkstra-demo
   [n-rows n-cols]
-  (let [grid (respecting-dynamic-scope
-              (for [row (range n-rows)]
-                (loop [cells []
-                       col 0]
-                  (if (= col n-cols)
-                    cells
-                    (let [cell {:x row :y col}
-                          link-none?  (partial link-none?  n-rows n-cols cell)
-                          link-east?  (partial link-east?  n-rows n-cols cell)
-                          link-south? (partial link-south? n-rows n-cols cell)
-                          cells (add-cell cells cell link-none? link-east? link-south?)]
-                      (recur cells (inc col)))))))]
-    (print-grid grid)))
+  (let [grid (for [row (range n-rows)]
+               (loop [cells []
+                      col 0]
+                 (if (= col n-cols)
+                   cells
+                   (let [cell {:x row :y col}
+                         link-none?  (partial link-none?  n-rows n-cols cell)
+                         link-east?  (partial link-east?  n-rows n-cols cell)
+                         link-south? (partial link-south? n-rows n-cols cell)
+                         cells (add-cell cells cell link-none? link-east? link-south?)]
+                     (recur cells (inc col))))))]
+    (-> (vec grid)
+        add-reciprocal-links
+        add-costs
+        print-grid)))
 
 (defn -main [& args]
   #?(:clj (seed/with-seed (first args)

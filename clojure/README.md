@@ -24,9 +24,9 @@ command-line response times, just like any other command-line binary...
 [lumo]:https://github.com/anmonteiro/lumo
 
 #### Example Lumo invocation
-```
-> lumo -c src -m mfp.binary-tree
-```
+`
+> lumo -D cljsjs/seedrandom:3.0.5-0 -c src -m mfp.sidewinder
+`
 
 Typically I'd develop at a full editor-connected REPL, for maximum
 exploratory reach, but since the sibling Ruby project's workflow lends

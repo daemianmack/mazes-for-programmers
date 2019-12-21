@@ -9,11 +9,13 @@
 (defn v-wall-p [pred] (if (pred) " "  v-wall))
 (defn h-wall-p [pred] (if (pred) "   " h-wall))
 
-(defn body [{cost :cost}]
-  (str " "
-       #?(:clj  (Integer/toString cost 36)
-          :cljs (.toString cost 36))
-       " "))
+(defn body [{cost :cost path :path}]
+  (if path
+    (str " "
+         #?(:clj  (Integer/toString cost 36)
+            :cljs (.toString cost 36))
+         " ")
+    "   "))
 
 (defn draw-top-of-row [sb row]
   (.append sb v-wall)
@@ -138,15 +140,45 @@
                  (into (vec (rest frontier)) new-frontier)
                  (conj visited cell)))))))
 
+(defn index-by-coords
+  [grid]
+  (let [stream (mapcat identity grid)]
+    (group-by #(select-keys % [:x :y]) stream)))
+
 (defn add-costs
   [grid]
-  (let [stream (mapcat identity grid)
-        indexed (group-by #(select-keys % [:x :y]) stream)
+  (let [indexed (index-by-coords grid)
         with-costs (find-costs (ffirst grid) indexed)]
     (reduce (fn [acc [{x :x y :y} {cost :cost}]]
               (assoc-in acc [x y :cost] cost))
             grid
             with-costs)))
+
+(defn shortest-path-cells
+  [indexed root goal]
+  (loop [acc [goal]
+         cell goal]
+    (if (= cell root)
+      acc
+      (let [next-neighbor (first
+                           (->> (:links cell)
+                                (mapcat (partial find-neighbor cell indexed))
+                                (filter #(< (:cost %)
+                                            (:cost cell)))))]
+        (recur (conj acc next-neighbor)
+               next-neighbor)))))
+
+(defn add-pathing
+  [grid]
+  (let [indexed (index-by-coords grid)
+        root (ffirst grid)
+        goal (last (last grid))
+        cells (shortest-path-cells indexed root goal)]
+    (reduce
+     (fn [acc {x :x y :y}]
+       (assoc-in acc [x y :path] true))
+     grid
+     cells)))
 
 (defmulti reciprocal-link-desc (fn [cell link] link))
 
@@ -186,6 +218,7 @@
     (-> (vec grid)
         add-reciprocal-links
         add-costs
+        add-pathing
         print-grid)))
 
 (defn -main [& args]
